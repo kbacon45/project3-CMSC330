@@ -55,7 +55,7 @@ let rec move (nfa: ('q,'s) nfa_t) (qs: 'q list) (s: 's option) : 'q list = match
 | elem::rest -> let res = (findTrans elem s nfa.delta []) in 
  match res  with
 [] ->  (move nfa rest s)
-| elem::emptyLst -> res@(move nfa rest s)
+| elem::emptyLst -> (union res (move nfa rest s) )
 
 
 let rec e_closureHelp (nfa: ('q, 's) nfa_t) (qs: 'q list) (visited: 'q list) : 'q list =
