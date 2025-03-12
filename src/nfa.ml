@@ -70,7 +70,7 @@ let e_closure (nfa: ('q, 's) nfa_t) (qs: 'q list) : 'q list =
   
 
 let rec acceptHelp (nfa: ('q,char) nfa_t) lst states = match lst with
-[] -> (let finalStates = (intersection states nfa.fs) in 
+[] -> (let finalStates = (intersection (e_closure nfa states) nfa.fs) in 
 match finalStates with
 [] -> false 
 | curr::rest -> true )
