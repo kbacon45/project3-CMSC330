@@ -74,7 +74,7 @@ let rec acceptHelp (nfa: ('q,char) nfa_t) lst states = match lst with
 match finalStates with
 [] -> false 
 | curr::rest -> true )
-| elem::rest2 -> let newStates = move  nfa (e_closure nfa states) elem in
+| elem::rest2 -> let newStates = move  nfa (e_closure nfa states) elem in if (newStates = []) then false else
  acceptHelp nfa rest2 newStates
 
 let optConvert lst = List.map (fun x -> (Some x)) lst 
