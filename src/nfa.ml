@@ -32,26 +32,41 @@ let firstElem tup = match tup with
 let secondElem tup = match tup with
 (a,b) -> b
 
-let rec findTrans q sym delList = match delList with
-[] -> []
-| elem::rest -> if elem.input = sym && (firstElem elem.states) = q
-  then (secondElem elem.states)::(findTrans q sym rest)
-else findTrans q sym rest;;
+
+
+let rec findTrans q sym delList repeats = match delList with
+  | [] -> []
+  | elemR :: rest -> 
+      if elemR.input = sym && (firstElem elemR.states) = q then
+        let newE = secondElem elemR.states in
+        if elem newE repeats then 
+          findTrans q sym rest repeats
+        else 
+          newE :: (findTrans q sym rest (newE :: repeats))
+      else 
+        findTrans q sym rest repeats
+
+
+
 
 
 let rec move (nfa: ('q,'s) nfa_t) (qs: 'q list) (s: 's option) : 'q list = match qs with
 [] -> []
-| elem::rest -> let res = (findTrans elem s nfa.delta) in 
+| elem::rest -> let res = (findTrans elem s nfa.delta []) in 
  match res  with
 [] ->  (move nfa rest s)
 | elem::emptyLst -> res@(move nfa rest s)
 
 
-let rec e_closureHelp nfa qs repeats = match qs with
-[] -> []
-| elem::rest -> qs@(e_closureHelp nfa (diff (move nfa qs None) (union qs repeats)) (union qs repeats))
+let rec e_closureHelp (nfa: ('q, 's) nfa_t) (qs: 'q list) (visited: 'q list) : 'q list =
+  match qs with
+  | [] -> visited  
+  | elem::rest ->
+      let new_states = (diff (move nfa [elem] None) visited) in
+      (e_closureHelp nfa (rest @ new_states) (union visited new_states))
 
-let rec e_closure (nfa: ('q,'s) nfa_t) (qs: 'q list) : 'q list = (e_closureHelp nfa qs [])
+let e_closure (nfa: ('q, 's) nfa_t) (qs: 'q list) : 'q list =
+  e_closureHelp nfa qs qs
   
 
 let rec acceptHelp (nfa: ('q,char) nfa_t) lst states = match lst with
