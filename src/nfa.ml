@@ -47,9 +47,11 @@ let rec move (nfa: ('q,'s) nfa_t) (qs: 'q list) (s: 's option) : 'q list = match
 | elem::emptyLst -> res@(move nfa rest s)
 
 
-let rec e_closure (nfa: ('q,'s) nfa_t) (qs: 'q list) : 'q list = match qs with
+let rec e_closureHelp nfa qs repeats = match qs with
 [] -> []
-| elem::rest -> qs@(e_closure nfa (diff (move nfa qs None) qs))
+| elem::rest -> qs@(e_closureHelp nfa (diff (move nfa qs None) (union qs repeats)) (union qs repeats))
+
+let rec e_closure (nfa: ('q,'s) nfa_t) (qs: 'q list) : 'q list = (e_closureHelp nfa qs [])
   
 
 let rec acceptHelp (nfa: ('q,char) nfa_t) lst states = match lst with
