@@ -66,11 +66,11 @@ let rec regexp_to_nfa (regexp: regexp_t) : (int, char) nfa_t =
   | Star regex -> 
       let str = regexp_to_nfa regex in
       let newN = fresh () in 
-      let newF = fresh () in 
+      let newF = fresh () in  
       { sigma = str.sigma; 
-        qs = str.qs; 
-        q0 = str.q0; 
-        fs = str.fs; 
+        qs = union str.qs ([newN]@[newF]); 
+        q0 = newN; 
+        fs = [newF]; 
         delta = [{ input = None; states = (newN,newF) }] @
                 [{ input = None; states = (newF,newN) }] @
                 [{ input = None; states = (newN, str.q0) }] @
