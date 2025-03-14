@@ -44,7 +44,7 @@ let rec regexp_to_nfa (regexp: regexp_t) : (int, char) nfa_t =
       let s1 = regexp_to_nfa r1 in 
       let s2 = regexp_to_nfa r2 in 
       { sigma = (union s1.sigma s2.sigma); 
-        qs = (union s1.qs s2.qs); 
+        qs = union (union s1.qs s2.qs) ([newN]@[newF]); 
         q0 = newN; 
         fs = [newF]; 
         delta = [{ input = None; states = (newN, s1.q0) }] @
@@ -64,13 +64,17 @@ let rec regexp_to_nfa (regexp: regexp_t) : (int, char) nfa_t =
                 s1.delta @ s2.delta }
 
   | Star regex -> 
-      let str = regexp_to_nfa regex in 
+      let str = regexp_to_nfa regex in
+      let newN = fresh () in 
+      let newF = fresh () in 
       { sigma = str.sigma; 
         qs = str.qs; 
         q0 = str.q0; 
         fs = str.fs; 
-        delta = [{ input = None; states = (getFinal str.fs, str.q0) }] @
-                [{ input = None; states = (str.q0, getFinal str.fs) }] @
+        delta = [{ input = None; states = (newN,newF) }] @
+                [{ input = None; states = (newF,newN) }] @
+                [{ input = None; states = (newN, str.q0) }] @
+                [{ input = None; states = (getFinal str.fs, newF) }] @
                 str.delta }
 
 
