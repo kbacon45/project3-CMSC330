@@ -99,15 +99,43 @@ let new_finals (nfa: ('q,'s) nfa_t) (qs: 'q list) : 'q list list = match (inters
 [] -> []
 | x::xs -> [qs]
 
+let rec lookTrans (nfa: ('q,'s) nfa_t) (dfa: ('q list, 's) nfa_t)
+    (tBuildLst: ('q list, 's) transition list) : ('q list, 's) nfa_t = 
+  match tBuildLst with
+  | [] -> dfa
+  | curr::rest -> 
+      let goTo = secondElem curr.states in 
+      if goTo <> [] then (
+      if elem goTo dfa.qs 
+      then lookTrans nfa {sigma = dfa.sigma; qs = dfa.qs; q0 = dfa.q0; fs = dfa.fs; delta = curr::dfa.delta } rest
+      else lookTrans nfa {sigma = dfa.sigma; qs = goTo::dfa.qs; q0 = dfa.q0; fs = dfa.fs; delta = curr::dfa.delta } rest )
+    else lookTrans nfa {sigma = dfa.sigma; qs = dfa.qs; q0 = dfa.q0; fs = dfa.fs; delta = dfa.delta } rest
+
 let rec nfa_to_dfa_step (nfa: ('q,'s) nfa_t) (dfa: ('q list, 's) nfa_t)
-    (work: 'q list list) : ('q list, 's) nfa_t =
-  failwith "this function is optional"
+    (work: 'q list list) (visited: 'q list list) : ('q list, 's) nfa_t = 
+  match work with
+  | [] -> dfa
+  | x::xs -> 
+      let tBuildLst = new_trans nfa x in 
+      let newDfa = (lookTrans nfa dfa tBuildLst) in
+      let newVisted = (union [x] visited) in
+      nfa_to_dfa_step nfa newDfa (diff newDfa.qs newVisted) newVisted
 
-(*let nfahelper (nfa: ('q,'s) nfa_t) : ('q list, 's) nfa_t  =*)
+      let rec addFinals (nfa: ('q, 's) nfa_t) (dfa: ('q list, 's) nfa_t) (stateLst: 'q list list) : ('q list, 's) nfa_t = 
+        match stateLst with
+        | [] -> dfa
+        | curr::rest ->  
+            if intersection curr nfa.fs <> [] then
+              addFinals nfa {sigma = dfa.sigma; qs = dfa.qs; q0 = dfa.q0; fs = curr::dfa.fs; delta = dfa.delta } rest
+            else
+              addFinals nfa dfa rest
+      
+      
+      
+
+let nfa_to_dfa (nfa: ('q,'s) nfa_t) : ('q list, 's) nfa_t = 
+  let startStates = e_closure nfa [nfa.q0] in
+  let dfaRes = nfa_to_dfa_step nfa {sigma = nfa.sigma; qs = [startStates]; q0 = startStates; fs = []; delta = []} [startStates] [startStates] in
+  addFinals nfa dfaRes dfaRes.qs
 
 
-let nfa_to_dfa (nfa: ('q,'s) nfa_t) : ('q list, 's) nfa_t = failwith "unimplemented"
-
-
-(*let newNFA = {sigma=nfa.sigma;qs=nfa.qs;q0=(e_closure nfa.qs);delta=nfa.delta} in
-nfaHelper newNFA*)
